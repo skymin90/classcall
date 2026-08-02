@@ -145,27 +145,19 @@ body{
 
 <div class="reason-grid">
 
-<button
-class="reason-btn"
-onclick="sendRequest('질문')">
+<button class="reason-btn" onclick="sendRequest('질문')">
 ❓ 질문
 </button>
 
-<button
-class="reason-btn"
-onclick="sendRequest('상담')">
+<button class="reason-btn" onclick="sendRequest('상담')">
 💬 상담
 </button>
 
-<button
-class="reason-btn"
-onclick="sendRequest('급함')">
+<button class="reason-btn" onclick="sendRequest('급함')">
 🚨 급함
 </button>
 
-<button
-class="reason-btn"
-onclick="sendRequest('기타')">
+<button class="reason-btn" onclick="sendRequest('기타')">
 📝 기타
 </button>
 
@@ -215,6 +207,40 @@ const db = getFirestore(app);
 let selectedNumber = null;
 let oldMsg="";
 
+function playDingDong(){
+
+const audioCtx =
+new (window.AudioContext || window.webkitAudioContext)();
+
+function tone(freq,start,duration){
+
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+
+osc.frequency.value = freq;
+osc.type = "sine";
+
+gain.gain.setValueAtTime(
+0.15,
+audioCtx.currentTime + start
+);
+
+osc.start(audioCtx.currentTime + start);
+osc.stop(audioCtx.currentTime + start + duration);
+
+}
+
+/* 띵 */
+tone(784,0,0.25);
+
+/* 동 */
+tone(1047,0.28,0.35);
+
+}
+
 /* 현재 알림 */
 
 onSnapshot(
@@ -238,6 +264,15 @@ setTimeout(()=>{
 document.body.classList.remove("flash");
 },10000);
 
+/* 교사→학생 호출일 때만 띵동 */
+
+if(
+msg.includes("학생") &&
+!msg.includes("요청")
+){
+playDingDong();
+}
+
 }
 
 oldMsg=msg;
@@ -245,7 +280,7 @@ oldMsg=msg;
 }
 );
 
-/* 번호 버튼 생성 */
+/* 번호 생성 */
 
 const grid =
 document.getElementById("numberGrid");
@@ -286,7 +321,6 @@ async function(reason){
 if(!selectedNumber){
 
 alert("출석번호를 선택하세요.");
-
 return;
 
 }
@@ -329,7 +363,6 @@ arr.push(d.data());
 });
 
 arr.reverse();
-
 arr = arr.slice(0,5);
 
 document.getElementById("history").innerHTML =
@@ -343,7 +376,6 @@ arr.length
 }
 
 loadHistory();
-
 setInterval(loadHistory,5000);
 
 /* 시계 */
