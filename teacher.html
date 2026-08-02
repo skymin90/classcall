@@ -43,12 +43,13 @@ h1{
     border-left:8px solid #2563eb;
     background:#f8fbff;
     border-radius:10px;
-    margin-bottom:10px;
+    margin-bottom:12px;
 }
 
 .request-time{
-    color:#777;
+    color:#666;
     font-size:14px;
+    margin-top:5px;
 }
 
 input,
@@ -87,12 +88,20 @@ textarea{
     font-size:22px;
 }
 
-.refresh{
+.confirm-btn{
     background:#16a34a;
 }
 
-.refresh:hover{
+.confirm-btn:hover{
     background:#15803d;
+}
+
+.refresh{
+    background:#0ea5e9;
+}
+
+.refresh:hover{
+    background:#0284c7;
 }
 
 </style>
@@ -114,7 +123,7 @@ textarea{
 <button
 class="btn refresh"
 onclick="loadRequests()">
-🔄 요청 새로고침
+🔄 새로고침
 </button>
 
 <hr>
@@ -200,7 +209,8 @@ doc,
 updateDoc,
 collection,
 addDoc,
-getDocs
+getDocs,
+deleteDoc
 }
 from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -216,8 +226,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* 학생 요청 불러오기 */
-
 window.loadRequests = async function(){
 
 const snap =
@@ -232,7 +240,7 @@ snap.forEach((d)=>{
 
 if(d.id==="current") return;
 
-const data = d.data();
+const data=d.data();
 
 count++;
 
@@ -247,35 +255,49 @@ ${data.message || ""}
 🕒 ${data.time || ""}
 </div>
 
+<br>
+
+<button
+class="btn confirm-btn"
+onclick="deleteRequest('${d.id}')">
+✅ 확인
+</button>
+
 </div>
 `;
 
 });
 
-document.getElementById(
-"requestCount"
-).innerHTML =
+document.getElementById("requestCount").innerHTML =
 `요청 ${count}건`;
 
-document.getElementById(
-"requestList"
-).innerHTML =
+document.getElementById("requestList").innerHTML =
 html || "요청 없음";
+
+};
+
+window.deleteRequest = async function(id){
+
+if(!confirm("이 요청을 삭제할까요?")){
+return;
+}
+
+await deleteDoc(
+doc(db,"teacherRequest",id)
+);
+
+loadRequests();
 
 };
 
 loadRequests();
 setInterval(loadRequests,5000);
 
-/* 빠른 버튼 */
-
 window.quick = function(text){
 
 document.getElementById("message").value=text;
 
 };
-
-/* 학생 호출 */
 
 window.sendMessage = async function(){
 
@@ -286,12 +308,12 @@ const message =
 document.getElementById("message").value;
 
 if(!student){
-alert("학생 이름 입력");
+alert("학생 이름을 입력하세요.");
 return;
 }
 
 if(!message){
-alert("메시지 입력");
+alert("메시지를 입력하세요.");
 return;
 }
 
@@ -330,8 +352,6 @@ message:"대기중"
 },60000);
 
 };
-
-/* 대기중 */
 
 window.resetBoard = async function(){
 
