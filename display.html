@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>2-9 학급 알림판</title>
 
 <style>
-
 body{
     margin:0;
-    font-family:'Segoe UI', sans-serif;
-    background:#eef5ff;
     padding:20px;
+    background:#eef5ff;
+    font-family:'Segoe UI',sans-serif;
 }
 
 .container{
@@ -26,7 +23,7 @@ body{
     border-radius:20px;
     padding:20px;
     margin-bottom:15px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
 .title{
@@ -37,10 +34,10 @@ body{
 }
 
 #message{
+    text-align:center;
     font-size:52px;
     font-weight:bold;
-    text-align:center;
-    min-height:150px;
+    min-height:120px;
 }
 
 #clock{
@@ -54,10 +51,10 @@ body{
     padding:18px;
     border:none;
     border-radius:12px;
+    cursor:pointer;
     background:#2563eb;
     color:white;
     font-size:24px;
-    cursor:pointer;
 }
 
 .btn:hover{
@@ -65,7 +62,7 @@ body{
 }
 
 #history{
-    font-size:20px;
+    font-size:18px;
     line-height:1.8;
 }
 
@@ -74,17 +71,10 @@ body{
 }
 
 @keyframes blink{
-    0%{
-        background:#ffffff;
-    }
-    50%{
-        background:#ffcccc;
-    }
-    100%{
-        background:#ffffff;
-    }
+    0%{background:white;}
+    50%{background:#ffcccc;}
+    100%{background:white;}
 }
-
 </style>
 </head>
 
@@ -133,10 +123,116 @@ collection,
 getDocs,
 updateDoc,
 addDoc
-}
-from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDB9TqH8CHoKs1XQb3Jg9ecmyNq4N2VDTA",
   authDomain: "classcall-d0954.firebaseapp.com",
-  projectId: "
+  projectId: "classcall-d0954",
+  storageBucket: "classcall-d0954.firebasestorage.app",
+  messagingSenderId: "721726711585",
+  appId: "1:721726711585:web:e69bbc715caf82baa88060"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let oldMsg="";
+
+onSnapshot(
+doc(db,"call","current"),
+(snapshot)=>{
+
+const data=snapshot.data();
+
+if(!data) return;
+
+const msg=data.message || "대기중";
+
+document.getElementById("message").innerHTML=
+msg.replace(/\n/g,"<br>");
+
+if(msg!==oldMsg && msg!=="대기중"){
+
+document.body.classList.add("flash");
+
+setTimeout(()=>{
+document.body.classList.remove("flash");
+},10000);
+
+}
+
+oldMsg=msg;
+
+}
+);
+
+async function loadHistory(){
+
+const snap =
+await getDocs(collection(db,"history"));
+
+let arr=[];
+
+snap.forEach((d)=>{
+if(d.data().message){
+arr.push(d.data().message);
+}
+});
+
+arr = arr.slice(-5).reverse();
+
+document.getElementById("history").innerHTML =
+arr.length
+? arr.map(x=>"• "+x).join("<br>")
+: "최근 알림 없음";
+
+}
+
+loadHistory();
+setInterval(loadHistory,5000);
+
+window.teacherCall = async function(){
+
+const reason =
+prompt("사유를 입력하세요 (질문, 상담, 급함 등)");
+
+if(!reason) return;
+
+const text =
+`📢
+
+선생님 호출 요청
+
+사유 : ${reason}`;
+
+await updateDoc(
+doc(db,"call","current"),
+{
+message:text
+}
+);
+
+await addDoc(
+collection(db,"history"),
+{
+message:text,
+time:new Date().toLocaleString("ko-KR")
+}
+);
+
+alert("요청이 전송되었습니다.");
+
+};
+
+setInterval(()=>{
+
+document.getElementById("clock").innerText =
+new Date().toLocaleTimeString("ko-KR");
+
+},1000);
+
+</script>
+
+</body>
+</html>
