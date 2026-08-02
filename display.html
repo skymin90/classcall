@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>학급 알림판</title>
+
+<style>
+body{
+ margin:0;
+ height:100vh;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ text-align:center;
+ font-family:sans-serif;
+}
+
+#msg{
+ font-size:80px;
+ font-weight:bold;
+}
+
+.flash{
+ animation:blink .5s infinite;
+}
+
+@keyframes blink{
+ 0%{background:white;color:black;}
+ 50%{background:red;color:white;}
+ 100%{background:white;color:black;}
+}
+</style>
+</head>
+
+<body>
+
+<div id="msg">대기중</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDB9TqH8CHoKs1XQb3Jg9ecmyNq4N2VDTA",
+  authDomain: "classcall-d0954.firebaseapp.com",
+  projectId: "classcall-d0954",
+  storageBucket: "classcall-d0954.firebasestorage.app",
+  messagingSenderId: "721726711585",
+  appId: "1:721726711585:web:e69bbc715caf82baa88060"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let oldMsg="";
+
+onSnapshot(doc(db,"call","current"), (snap)=>{
+
+ const data=snap.data();
+ if(!data) return;
+
+ document.getElementById("msg").innerHTML =
+ data.message.replace(/\n/g,"<br>");
+
+ if(data.message!==oldMsg && data.message!=="대기중"){
+   document.body.classList.add("flash");
+
+   setTimeout(()=>{
+    document.body.classList.remove("flash");
+   },10000);
+ }
+
+ oldMsg=data.message;
+
+});
+
+</script>
+
+</body>
+</html>
