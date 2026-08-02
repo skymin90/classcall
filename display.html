@@ -11,8 +11,8 @@
 body{
     margin:0;
     padding:20px;
-    font-family:'Segoe UI',sans-serif;
     background:#eef5ff;
+    font-family:'Segoe UI',sans-serif;
 }
 
 .container{
@@ -25,7 +25,7 @@ body{
     border-radius:20px;
     padding:20px;
     margin-bottom:15px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
 .title{
@@ -48,11 +48,6 @@ body{
     font-weight:bold;
 }
 
-#history{
-    line-height:1.8;
-    font-size:18px;
-}
-
 .flash{
     animation:blink .5s infinite;
 }
@@ -73,9 +68,9 @@ body{
     padding:15px;
     border:none;
     border-radius:15px;
+    cursor:pointer;
     font-size:24px;
     font-weight:bold;
-    cursor:pointer;
     background:#dbeafe;
     color:#1d4ed8;
 }
@@ -93,11 +88,11 @@ body{
 }
 
 .reason-btn{
-    padding:20px;
     border:none;
     border-radius:15px;
-    font-size:26px;
     cursor:pointer;
+    padding:20px;
+    font-size:26px;
     background:#eff6ff;
 }
 
@@ -110,6 +105,11 @@ body{
     font-size:28px;
     font-weight:bold;
     margin-bottom:15px;
+}
+
+#history{
+    font-size:18px;
+    line-height:1.8;
 }
 
 </style>
@@ -145,22 +145,26 @@ body{
 
 <div class="reason-grid">
 
-<button class="reason-btn"
+<button
+class="reason-btn"
 onclick="sendRequest('질문')">
 ❓ 질문
 </button>
 
-<button class="reason-btn"
+<button
+class="reason-btn"
 onclick="sendRequest('상담')">
 💬 상담
 </button>
 
-<button class="reason-btn"
+<button
+class="reason-btn"
 onclick="sendRequest('급함')">
 🚨 급함
 </button>
 
-<button class="reason-btn"
+<button
+class="reason-btn"
 onclick="sendRequest('기타')">
 📝 기타
 </button>
@@ -170,21 +174,26 @@ onclick="sendRequest('기타')">
 </div>
 
 <div class="card">
-<h2>📋 최근 알림</h2>
-<div id="history">불러오는 중...</div>
+
+<h2>📋 최근 학생 요청</h2>
+
+<div id="history">
+불러오는 중...
+</div>
+
 </div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
 
 import {
 getFirestore,
 doc,
 onSnapshot,
-updateDoc,
 collection,
 addDoc,
 getDocs
@@ -192,19 +201,19 @@ getDocs
 from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey:"AIzaSyDB9TqH8CHoKs1XQb3Jg9ecmyNq4N2VDTA",
-authDomain:"classcall-d0954.firebaseapp.com",
-projectId:"classcall-d0954",
-storageBucket:"classcall-d0954.firebasestorage.app",
-messagingSenderId:"721726711585",
-appId:"1:721726711585:web:e69bbc715caf82baa88060"
+  apiKey: "AIzaSyDB9TqH8CHoKs1XQb3Jg9ecmyNq4N2VDTA",
+  authDomain: "classcall-d0954.firebaseapp.com",
+  projectId: "classcall-d0954",
+  storageBucket: "classcall-d0954.firebasestorage.app",
+  messagingSenderId: "721726711585",
+  appId: "1:721726711585:web:e69bbc715caf82baa88060"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let selectedNumber = null;
 let oldMsg="";
-let selectedNumber=null;
 
 /* 현재 알림 */
 
@@ -216,9 +225,9 @@ const data=snapshot.data();
 
 if(!data) return;
 
-const msg=data.message;
+const msg=data.message || "대기중";
 
-document.getElementById("message").innerHTML=
+document.getElementById("message").innerHTML =
 msg.replace(/\n/g,"<br>");
 
 if(msg!==oldMsg && msg!=="대기중"){
@@ -236,14 +245,14 @@ oldMsg=msg;
 }
 );
 
-/* 번호 생성 */
+/* 번호 버튼 생성 */
 
-const grid=
+const grid =
 document.getElementById("numberGrid");
 
 for(let i=1;i<=33;i++){
 
-const btn=
+const btn =
 document.createElement("button");
 
 btn.className="number-btn";
@@ -260,7 +269,7 @@ document
 
 btn.classList.add("selected");
 
-document.getElementById("selected").innerHTML=
+document.getElementById("selected").innerHTML =
 `✅ ${i}번 학생`;
 
 };
@@ -269,7 +278,7 @@ grid.appendChild(btn);
 
 }
 
-/* 요청 전송 */
+/* 학생 요청 저장 */
 
 window.sendRequest =
 async function(reason){
@@ -285,17 +294,14 @@ return;
 const text =
 `${selectedNumber}번 학생 ${reason} 요청`;
 
-await updateDoc(
-doc(db,"teacherRequest","current"),
-{
-message:text
-}
-);
-
 await addDoc(
-collection(db,"history"),
+collection(db,"teacherRequest"),
 {
-message:text
+number:selectedNumber,
+reason:reason,
+message:text,
+time:new Date().toLocaleTimeString("ko-KR"),
+status:"new"
 }
 );
 
@@ -303,25 +309,36 @@ alert("요청이 전송되었습니다.");
 
 };
 
-/* 최근 알림 */
+/* 최근 요청 */
 
 async function loadHistory(){
 
-const snap=
+const snap =
 await getDocs(
-collection(db,"history")
+collection(db,"teacherRequest")
 );
 
 let arr=[];
 
-snap.forEach((doc)=>{
-arr.push(doc.data().message);
+snap.forEach((d)=>{
+
+if(d.id==="current") return;
+
+arr.push(d.data());
+
 });
 
-arr=arr.slice(-5).reverse();
+arr.reverse();
 
-document.getElementById("history").innerHTML=
-arr.map(x=>"• "+x).join("<br>");
+arr = arr.slice(0,5);
+
+document.getElementById("history").innerHTML =
+
+arr.length
+? arr.map(x =>
+`• ${x.message}<br>🕒 ${x.time}`
+).join("<br><br>")
+: "최근 요청 없음";
 
 }
 
@@ -333,7 +350,7 @@ setInterval(loadHistory,5000);
 
 setInterval(()=>{
 
-document.getElementById("clock").innerText=
+document.getElementById("clock").innerText =
 new Date().toLocaleTimeString("ko-KR");
 
 },1000);
