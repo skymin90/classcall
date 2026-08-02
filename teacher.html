@@ -16,7 +16,7 @@ body{
 }
 
 .container{
-    max-width:1000px;
+    max-width:1100px;
     margin:auto;
 }
 
@@ -32,11 +32,23 @@ h1{
     color:#2563eb;
 }
 
-.request-box{
-    font-size:30px;
+#requestCount{
+    font-size:24px;
     font-weight:bold;
-    text-align:center;
-    min-height:80px;
+    color:#dc2626;
+}
+
+.request-item{
+    padding:15px;
+    border-left:8px solid #2563eb;
+    background:#f8fbff;
+    border-radius:10px;
+    margin-bottom:10px;
+}
+
+.request-time{
+    color:#777;
+    font-size:14px;
 }
 
 input,
@@ -46,8 +58,8 @@ textarea{
     padding:15px;
     margin-top:10px;
     margin-bottom:10px;
-    border-radius:10px;
     border:1px solid #ccc;
+    border-radius:10px;
     font-size:20px;
 }
 
@@ -75,28 +87,43 @@ textarea{
     font-size:22px;
 }
 
+.refresh{
+    background:#16a34a;
+}
+
+.refresh:hover{
+    background:#15803d;
+}
+
 </style>
 </head>
-
 <body>
 
 <div class="container">
 
 <div class="card">
 
-<h1>📢 학생 요청</h1>
+<h1>📢 학생 요청 목록</h1>
 
-<div id="studentRequest" class="request-box">
-현재 없음
+<div id="requestCount">
+요청 0건
 </div>
 
 <br>
 
 <button
-class="btn big"
-onclick="clearStudentRequest()">
-✅ 요청 확인
+class="btn refresh"
+onclick="loadRequests()">
+🔄 요청 새로고침
 </button>
+
+<hr>
+
+<div id="requestList">
+
+요청 없음
+
+</div>
 
 </div>
 
@@ -173,7 +200,7 @@ doc,
 updateDoc,
 collection,
 addDoc,
-onSnapshot
+getDocs
 }
 from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -189,23 +216,56 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* 학생 요청 실시간 표시 */
+/* 학생 요청 불러오기 */
 
-onSnapshot(
-doc(db,"teacherRequest","current"),
-(snapshot)=>{
+window.loadRequests = async function(){
 
-const data=snapshot.data();
+const snap =
+await getDocs(
+collection(db,"teacherRequest")
+);
 
-if(!data) return;
+let html="";
+let count=0;
+
+snap.forEach((d)=>{
+
+if(d.id==="current") return;
+
+const data = d.data();
+
+count++;
+
+html += `
+<div class="request-item">
+
+<div>
+${data.message || ""}
+</div>
+
+<div class="request-time">
+🕒 ${data.time || ""}
+</div>
+
+</div>
+`;
+
+});
 
 document.getElementById(
-"studentRequest"
+"requestCount"
 ).innerHTML =
-data.message || "현재 없음";
+`요청 ${count}건`;
 
-}
-);
+document.getElementById(
+"requestList"
+).innerHTML =
+html || "요청 없음";
+
+};
+
+loadRequests();
+setInterval(loadRequests,5000);
 
 /* 빠른 버튼 */
 
@@ -217,8 +277,7 @@ document.getElementById("message").value=text;
 
 /* 학생 호출 */
 
-window.sendMessage =
-async function(){
+window.sendMessage = async function(){
 
 const student =
 document.getElementById("student").value;
@@ -227,19 +286,13 @@ const message =
 document.getElementById("message").value;
 
 if(!student){
-
 alert("학생 이름 입력");
-
 return;
-
 }
 
 if(!message){
-
 alert("메시지 입력");
-
 return;
-
 }
 
 const text =
@@ -280,27 +333,12 @@ message:"대기중"
 
 /* 대기중 */
 
-window.resetBoard =
-async function(){
+window.resetBoard = async function(){
 
 await updateDoc(
 doc(db,"call","current"),
 {
 message:"대기중"
-}
-);
-
-};
-
-/* 학생 요청 확인 */
-
-window.clearStudentRequest =
-async function(){
-
-await updateDoc(
-doc(db,"teacherRequest","current"),
-{
-message:"현재 없음"
 }
 );
 
