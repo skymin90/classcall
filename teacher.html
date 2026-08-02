@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>2-9 학급 알림판 관리자</title>
 
 <style>
+
 body{
     margin:0;
-    padding:25px;
-    font-family:'Segoe UI',sans-serif;
+    padding:20px;
     background:#eef5ff;
+    font-family:'Segoe UI',sans-serif;
 }
 
 .container{
-    max-width:900px;
+    max-width:1000px;
     margin:auto;
 }
 
@@ -30,6 +32,13 @@ h1{
     color:#2563eb;
 }
 
+.request-box{
+    font-size:30px;
+    font-weight:bold;
+    text-align:center;
+    min-height:80px;
+}
+
 input,
 textarea{
     width:100%;
@@ -37,29 +46,24 @@ textarea{
     padding:15px;
     margin-top:10px;
     margin-bottom:10px;
-    font-size:20px;
-    border:1px solid #ccc;
     border-radius:10px;
+    border:1px solid #ccc;
+    font-size:20px;
 }
 
 textarea{
     height:120px;
 }
 
-.button-row{
-    margin-top:10px;
-    margin-bottom:15px;
-}
-
 .btn{
-    border:none;
-    border-radius:10px;
     background:#2563eb;
     color:white;
+    border:none;
+    border-radius:12px;
     padding:12px 18px;
     margin:5px;
-    font-size:18px;
     cursor:pointer;
+    font-size:18px;
 }
 
 .btn:hover{
@@ -69,7 +73,6 @@ textarea{
 .big{
     width:100%;
     font-size:22px;
-    margin-top:10px;
 }
 
 </style>
@@ -81,39 +84,63 @@ textarea{
 
 <div class="card">
 
-<h1>👨‍🏫 2-9 학급 알림판 관리자</h1>
+<h1>📢 학생 요청</h1>
+
+<div id="studentRequest" class="request-box">
+현재 없음
+</div>
+
+<br>
+
+<button
+class="btn big"
+onclick="clearStudentRequest()">
+✅ 요청 확인
+</button>
+
+</div>
+
+<div class="card">
+
+<h1>👨‍🏫 학생 호출</h1>
 
 <input
 id="student"
-placeholder="학생 이름 입력">
+placeholder="학생 이름">
 
 <textarea
 id="message"
-placeholder="전달할 메시지를 입력하세요"></textarea>
+placeholder="메시지 입력"></textarea>
 
-<div class="button-row">
+<div>
 
-<button class="btn" onclick="quick('즉시 교무실로 오세요')">
+<button class="btn"
+onclick="quick('즉시 교무실로 오세요')">
 즉시
 </button>
 
-<button class="btn" onclick="quick('1교시 끝나고 오세요')">
+<button class="btn"
+onclick="quick('1교시 끝나고 오세요')">
 1교시 후
 </button>
 
-<button class="btn" onclick="quick('2교시 끝나고 오세요')">
+<button class="btn"
+onclick="quick('2교시 끝나고 오세요')">
 2교시 후
 </button>
 
-<button class="btn" onclick="quick('3교시 끝나고 오세요')">
+<button class="btn"
+onclick="quick('3교시 끝나고 오세요')">
 3교시 후
 </button>
 
-<button class="btn" onclick="quick('점심시간에 오세요')">
-점심시간
+<button class="btn"
+onclick="quick('점심시간에 오세요')">
+점심
 </button>
 
-<button class="btn" onclick="quick('방과후에 오세요')">
+<button class="btn"
+onclick="quick('방과후에 오세요')">
 방과후
 </button>
 
@@ -145,7 +172,8 @@ getFirestore,
 doc,
 updateDoc,
 collection,
-addDoc
+addDoc,
+onSnapshot
 }
 from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -161,13 +189,36 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* 학생 요청 실시간 표시 */
+
+onSnapshot(
+doc(db,"teacherRequest","current"),
+(snapshot)=>{
+
+const data=snapshot.data();
+
+if(!data) return;
+
+document.getElementById(
+"studentRequest"
+).innerHTML =
+data.message || "현재 없음";
+
+}
+);
+
+/* 빠른 버튼 */
+
 window.quick = function(text){
 
-document.getElementById("message").value = text;
+document.getElementById("message").value=text;
 
 };
 
-window.sendMessage = async function(){
+/* 학생 호출 */
+
+window.sendMessage =
+async function(){
 
 const student =
 document.getElementById("student").value;
@@ -176,16 +227,23 @@ const message =
 document.getElementById("message").value;
 
 if(!student){
-alert("학생 이름을 입력하세요.");
+
+alert("학생 이름 입력");
+
 return;
+
 }
 
 if(!message){
-alert("메시지를 입력하세요.");
+
+alert("메시지 입력");
+
 return;
+
 }
 
-const text = `🚨
+const text =
+`🚨
 
 ${student} 학생
 
@@ -201,14 +259,13 @@ message:text
 await addDoc(
 collection(db,"history"),
 {
-message:text,
-time:new Date().toLocaleString("ko-KR")
+message:text
 }
 );
 
 alert("전송 완료");
 
-setTimeout(async ()=>{
+setTimeout(async()=>{
 
 await updateDoc(
 doc(db,"call","current"),
@@ -221,12 +278,29 @@ message:"대기중"
 
 };
 
-window.resetBoard = async function(){
+/* 대기중 */
+
+window.resetBoard =
+async function(){
 
 await updateDoc(
 doc(db,"call","current"),
 {
 message:"대기중"
+}
+);
+
+};
+
+/* 학생 요청 확인 */
+
+window.clearStudentRequest =
+async function(){
+
+await updateDoc(
+doc(db,"teacherRequest","current"),
+{
+message:"현재 없음"
 }
 );
 
