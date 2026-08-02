@@ -1,95 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
+
 <head>
 <meta charset="utf-8">
-<title>학생 호출</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>2-9 학급 알림판 관리자</title>
 
 <style>
+
 body{
-  font-family:sans-serif;
-  max-width:600px;
-  margin:50px auto;
-  text-align:center;
+    font-family:'Segoe UI',sans-serif;
+    background:#eef5ff;
+    padding:20px;
 }
 
-input{
-  font-size:24px;
-  padding:10px;
-  width:300px;
+.container{
+    max-width:900px;
+    margin:auto;
 }
 
-button{
-  font-size:24px;
-  padding:10px 20px;
-  margin:10px;
+.card{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    margin-bottom:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
-</style>
 
-</head>
+h1{
+    color:#2563eb;
+}
 
-<body>
+input,
+textarea{
+    width:100%;
+    padding:15px;
+    font-size:20px;
+    margin-top:10px;
+    margin-bottom:10px;
+    border:1px solid #ccc;
+    border-radius:10px;
+    box-sizing:border-box;
+}
 
-<h1>학생 호출</h1>
+textarea{
+    height:120px;
+}
 
-<input id="student" placeholder="학생 이름">
+.btn{
+    padding:12px 18px;
+    margin:5px;
+    border:none;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+    font-size:18px;
+}
 
-<br><br>
+.btn:hover{
+    background:#1d4ed8;
+}
 
-<button onclick="callStudent()">호출</button>
-<button onclick="resetBoard()">초기화</button>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDB9TqH8CHoKs1XQb3Jg9ecmyNq4N2VDTA",
-  authDomain: "classcall-d0954.firebaseapp.com",
-  projectId: "classcall-d0954",
-  storageBucket: "classcall-d0954.firebasestorage.app",
-  messagingSenderId: "721726711585",
-  appId: "1:721726711585:web:e69bbc715caf82baa88060"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.callStudent = async ()=>{
-
-  const name =
-  document.getElementById("student").value;
-
-  if(!name){
-    alert("학생 이름을 입력하세요.");
-    return;
-  }
-
-  await updateDoc(
-    doc(db,"call","current"),
-    {
-      message:`🚨
-
-${name} 학생
-
-교무실로 오세요`
-    }
-  );
-
-};
-
-window.resetBoard = async ()=>{
-
-  await updateDoc(
-    doc(db,"call","current"),
-    {
-      message:"대기중"
-    }
-  );
-
-};
-
-</script>
-
-</body>
-</html>
+.big{
+    font-size:22px;
+    width:100%;
+    margin-top:10px
