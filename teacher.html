@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>학생 호출</title>
+
+<style>
+body{
+  font-family:sans-serif;
+  max-width:600px;
+  margin:50px auto;
+  text-align:center;
+}
+
+input{
+  font-size:24px;
+  padding:10px;
+  width:300px;
+}
+
+button{
+  font-size:24px;
+  padding:10px 20px;
+  margin:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>학생 호출</h1>
+
+<input id="student" placeholder="학생 이름">
+
+<br><br>
+
+<button onclick="callStudent()">호출</button>
+<button onclick="resetBoard()">초기화</button>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDB9TqH8CHoKs1XQb3Jg9ecmyNq4N2VDTA",
+  authDomain: "classcall-d0954.firebaseapp.com",
+  projectId: "classcall-d0954",
+  storageBucket: "classcall-d0954.firebasestorage.app",
+  messagingSenderId: "721726711585",
+  appId: "1:721726711585:web:e69bbc715caf82baa88060"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.callStudent = async ()=>{
+
+  const name =
+  document.getElementById("student").value;
+
+  if(!name){
+    alert("학생 이름을 입력하세요.");
+    return;
+  }
+
+  await updateDoc(
+    doc(db,"call","current"),
+    {
+      message:`🚨
+
+${name} 학생
+
+교무실로 오세요`
+    }
+  );
+
+};
+
+window.resetBoard = async ()=>{
+
+  await updateDoc(
+    doc(db,"call","current"),
+    {
+      message:"대기중"
+    }
+  );
+
+};
+
+</script>
+
+</body>
+</html>
